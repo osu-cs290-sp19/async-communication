@@ -21,13 +21,34 @@ function handleModalAcceptClick() {
     alert("You must fill in all of the fields!");
   } else {
 
-    var photoCardTemplate = Handlebars.templates.photoCard;
-    var newPhotoCardHTML = photoCardTemplate({
+    var request = new XMLHttpRequest();
+    var url = '/people/' + getPersonIdFromURL() + '/addPhoto';
+    request.open('POST', url);
+
+    var photo = {
       url: photoURL,
       caption: caption
+    };
+    var requestBody = JSON.stringify(photo);
+    console.log("== requestBody:", requestBody);
+
+    request.addEventListener('load', function (event) {
+      if (event.target.status === 200) {
+        var photoCardTemplate = Handlebars.templates.photoCard;
+        var newPhotoCardHTML = photoCardTemplate({
+          url: photoURL,
+          caption: caption
+        });
+        var photoCardContainer = document.querySelector('.photo-card-container');
+        photoCardContainer.insertAdjacentHTML('beforeend', newPhotoCardHTML);
+      } else {
+        var message = event.target.response;
+        alert("Error storing photo on server: " + message);
+      }
     });
-    var photoCardContainer = document.querySelector('.photo-card-container');
-    photoCardContainer.insertAdjacentHTML('beforeend', newPhotoCardHTML);
+
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.send(requestBody);
 
     hideModal();
 
